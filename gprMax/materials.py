@@ -386,8 +386,7 @@ class GenBruggemanSoilMoon(object):
 
         for i, fractions in enumerate(material_sets):
             # Calculate the effective permittivity and permeability using the Bruggeman mixing model
-            # Need to add dispersion to FeO
-            e_eff = bruggerman_mixing_model(fractions, [complex(material[0], material[1]) for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]])
+            # Need to add dispersion to FeO, and try to get it complex
             
             # Add enough zeroes to the material name so that they have the same length
             digitscount =  len(str(int(nbins)))
@@ -398,8 +397,8 @@ class GenBruggemanSoilMoon(object):
             # m.poles = 1
             # if m.poles > Material.maxpoles:
             #     Material.maxpoles = m.poles
-            m.er = e_eff.real
-            m.se = e_eff.imag
+            m.er = bruggerman_mixing_model(fractions, [material[0] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]])
+            m.se = np.average([material[1] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
             m.mr = np.average([material[2] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
             m.sm = np.average([material[3] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
             G.materials.append(m)
