@@ -363,7 +363,7 @@ class GenBruggemanSoilMoon(object):
 
         self.startmaterialnum = 0
 
-    def calculate_properties(self, nbins, G, fractalboxname):
+    def calculate_debye_properties(self, nbins, G, fractalboxname):
         """
         Calculates the soil's properties based on the Bruggeman mixing model.
         Args:
