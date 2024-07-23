@@ -337,32 +337,30 @@ class GenBruggemanSoilMoon(object):
     model by Bruggeman ().
     """
 
-    def __init__(self, ID, wtFeO, wtTiO2, wtAl2O3, wtMgO, wtSiO2, wtCaO, wtPotassium, wtThorium):
+    def __init__(self, ID, wtFeO1, wtFeO2, wtTiO21, wtTiO22, wtAl2O31, wtAl2O32, wtMgO1, wtMgO2, wtSiO21, wtSiO22, wtCaO1, wtCaO2):
         """
         Args:
             ID (str): Name of the soil.
-            wt<Mineral_Name> (float): <Mineral_Name>'s  weight fraction of the soil.
+            wt<Mineral_Name>1 (float): <Mineral_Name>'s  weight fraction of the soil, lower bound.
+            wt<Mineral_Name>2 (float): <Mineral_Name>'s  weight fraction of the soil, upper bound.
         """
         eps_0 = 8.854e-12
         mu_0 = 4*np.pi*1e-7
         # Order: Electrical Permittivity, Electrical Conductivity, Magnetic Permeability, Magnetic Loss, Density
-        self.FeO = np.array([50, 37*eps_0, 1, 0.1*mu_0, 5.74])
-        self.TiO2 = np.array([20, 80*eps_0, 1, 0.1*mu_0, 4.23])
-        self.Al2O3 = np.array([10, 9*eps_0, 1, 0.1*mu_0, 3.95])
-        self.MgO = np.array([5, 9*eps_0, 1, 0.1*mu_0, 3.58])
+        self.FeO = np.array([14.2, 37*eps_0, 1, 0.1*mu_0, 5.74])
+        self.TiO2 = np.array([86, 80*eps_0, 1, 0.1*mu_0, 4.23])
+        self.Al2O3 = np.array([9.34, 9*eps_0, 1, 0.1*mu_0, 3.95])
+        self.MgO = np.array([9.65, 9*eps_0, 1, 0.1*mu_0, 3.58])
         self.SiO2 = np.array([3.58, 0.001*eps_0, 1.05, 0.02*mu_0, 2.65])
-        self.CaO = np.array([5, 6*eps_0, 1, 0.1*mu_0, 3.35])
-        self.Potassium = np.array([5, 4*eps_0, 1, 0.1*mu_0, 2.34])
-        self.Thorium = np.array([5, 4*eps_0, 1, 0.1*mu_0, 11.72])
+        self.CaO = np.array([11.8, 6*eps_0, 1, 0.1*mu_0, 3.35])
 
         self.ID = ID
 
-        # Could implement for a range of volume fractions in the future
-        wt_all = np.array([wtFeO, wtTiO2, wtAl2O3, wtMgO, wtSiO2, wtCaO, wtPotassium, wtThorium])
-        densities = np.array([self.FeO[4], self.TiO2[4], self.Al2O3[4], self.MgO[4], self.SiO2[4], self.CaO[4], self.Potassium[4], self.Thorium[4]])
-        vol_fr_all = wt_all / densities
+        wt_all_low = np.array([wtFeO1, wtTiO21, wtAl2O31, wtMgO1, wtSiO21, wtCaO1])
+        wt_all_high = np.array([wtFeO2, wtTiO22, wtAl2O32, wtMgO2, wtSiO22, wtCaO2])
+        densities = np.array([self.FeO[4], self.TiO2[4], self.Al2O3[4], self.MgO[4], self.SiO2[4], self.CaO[4]])
+        self.vol_fr_all_range = np.array([wt_all_low / densities, wt_all_high / densities])
 
-        self.vol_fr_moon_layer = vol_fr_all / np.sum(vol_fr_all)
         self.startmaterialnum = 0
 
     def calculate_properties(self, nbins, G, fractalboxname):
@@ -375,34 +373,38 @@ class GenBruggemanSoilMoon(object):
         """
         self.startmaterialnum = len(G.materials)
 
-        sets = []
-        
+        material_sets = []
+
         for i in range(nbins):
             # Generate random values within the given ranges
-            fractions = np.array([np.random.uniform(low, high) for low, high in ranges])
+            fractions = np.array([np.random.uniform(low, high) for low, high in self.vol_fr_all_range.T])
             
             # Normalize to make the sum 100%
             total = np.sum(fractions)
             normalized_fractions = (fractions / total) * 100
-            sets.append(normalized_fractions)
-        
+            material_sets.append(normalized_fractions)
+
+        for i, fractions in enumerate(material_sets):
+            # Calculate the effective permittivity and permeability using the Bruggeman mixing model
+            # Need to add dispersion to FeO
+            e_eff = bruggerman_mixing_model(fractions, [np.complex(material[0], material[1]) for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]])
+            
             # Add enough zeroes to the material name so that they have the same length
             digitscount =  len(str(int(nbins)))
             materialID = '|{}_{}|'.format(fractalboxname, str(i + 1).zfill(digitscount))
             m = Material(len(G.materials), materialID)
-            m.type = 'debye'
+            # m.type = 'debye'
             m.averagable = False
-            m.poles = 1
-            if m.poles > Material.maxpoles:
-                Material.maxpoles = m.poles
-            m.er = 
-            m.se = 
-            m.mr = 
-            m.sm = 
+            # m.poles = 1
+            # if m.poles > Material.maxpoles:
+            #     Material.maxpoles = m.poles
+            m.er = np.real(e_eff)
+            m.se = np.imag(e_eff)
+            m.mr = np.average([material[2] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
+            m.sm = np.average([material[3] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
             G.materials.append(m)
 
-
-    def bruggerman_mixing_model(volume_fractions, epsilon_values):
+def bruggerman_mixing_model(volume_fractions, epsilon_values):
         def equation(epsilon_eff):
             numerator = 0
             denominator = 0

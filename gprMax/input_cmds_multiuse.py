@@ -722,33 +722,44 @@ def process_multicmds(multicmds, G):
             # Append the new material object to the materials list
             G.mixingmodels.append(s)
 
-        cmdname = '#soil_gen_bruggeman_moon'
+    cmdname = '#soil_gen_bruggeman_moon'
     if multicmds[cmdname] is not None:
         for cmdinstance in multicmds[cmdname]:
             tmp = cmdinstance.split()
-            if len(tmp) != 7:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires at exactly seven parameters')
-            if float(tmp[0]) < 0:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value for the sand fraction')
-            if float(tmp[1]) < 0:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value for the clay fraction')
-            if float(tmp[2]) < 0:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value for the bulk density')
-            if float(tmp[3]) < 0:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value for the sand particle density')
-            if float(tmp[4]) < 0:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value for the lower limit of the water volumetric fraction')
-            if float(tmp[5]) < 0:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value for the upper limit of the water volumetric fraction')
-            if any(x.ID == tmp[6] for x in G.mixingmodels):
+            if len(tmp) != 13:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires exactly thirteen parameters')
+            if 100 < float(tmp[0]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of FeO fraction')
+            if 100 < float(tmp[1]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for upper limit of FeO fraction')
+            if 100 < float(tmp[2]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of TiO2 fraction')
+            if 100 < float(tmp[3]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for upper limit of TiO2 fraction')
+            if 100 < float(tmp[4]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of Al2O3 fraction')
+            if 100 < float(tmp[5]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for upper limit of Al2O3 fraction')
+            if 100 < float(tmp[6]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of MgO fraction')
+            if 100 < float(tmp[7]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for upper limit of MgO fraction')
+            if 100 < float(tmp[8]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of SiO2 fraction')
+            if 100 < float(tmp[9]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for upper limit of SiO2 fraction')
+            if 100 < float(tmp[10]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of CaO fraction')
+            if 100 < float(tmp[11]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for upper limit of CaO fraction')
+            if any(x.ID == tmp[12] for x in G.mixingmodels):
                 raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' with ID {} already exists'.format(tmp[6]))
 
             # Create a new instance of the Material class material (start index after pec & free_space)
-            s = GenBruggemanSoilMoon(tmp[6], float(tmp[0]), float(tmp[1]), float(tmp[2]), float(tmp[3]), (float(tmp[4]), float(tmp[5])))
+            s = GenBruggemanSoilMoon(tmp[12], float(tmp[0]), float(tmp[1]), float(tmp[2]), float(tmp[3]), float(tmp[4]), float(tmp[5]), float(tmp[6]), float(tmp[7]), float(tmp[8]), float(tmp[9]), float(tmp[10]), float(tmp[11]))
 
             if G.messages:
-                print('Mixing model (General Bruggeman) used to create {} with sand fraction {:g}, clay fraction {:g}, bulk density {:g}g/cm3, sand particle density {:g}g/cm3, and water volumetric fraction {:g} to {:g} created.'.format(s.ID, s.S, s.C, s.rb, s.rs, s.mu[0], s.mu[1]))
-
+                print('Mixing model (General Bruggeman) used to create {} with FeO fraction {:g} to {:g}, TiO2 fraction {:g} to {:g}, Al2O3 fraction {:g} to {:g}, MgO fraction {:g} to {:g}, SiO2 fraction {:g} to {:g}, CaO fraction {:g} to {:g} created.'.format(s.ID, s.vol_fr_all_range[0][0], s.vol_fr_all_range[1][0], s.vol_fr_all_range[0][1], s.vol_fr_all_range[1][1], s.vol_fr_all_range[0][2], s.vol_fr_all_range[1][2], s.vol_fr_all_range[0][3], s.vol_fr_all_range[1][3], s.vol_fr_all_range[0][4], s.vol_fr_all_range[1][4], s.vol_fr_all_range[0][5], s.vol_fr_all_range[1][5]))
             # Append the new material object to the materials list
             G.mixingmodels.append(s)
 
