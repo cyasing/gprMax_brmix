@@ -17,6 +17,7 @@
 # along with gprMax.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
+from scipy.optimize import fsolve 
 
 from gprMax.constants import e0
 from gprMax.constants import m0
@@ -328,3 +329,87 @@ class PeplinskiSoil(object):
             G.materials.append(m)
 
             muiter.iternext()
+
+
+class GenBruggemanSoilMoon(object):
+    """
+    Soil objects for moon that are characterised according to a mixing
+    model by Bruggeman ().
+    """
+
+    def __init__(self, ID, wtFeO, wtTiO2, wtAl2O3, wtMgO, wtSiO2, wtCaO, wtPotassium, wtThorium):
+        """
+        Args:
+            ID (str): Name of the soil.
+            wt<Mineral_Name> (float): <Mineral_Name>'s  weight fraction of the soil.
+        """
+        eps_0 = 8.854e-12
+        mu_0 = 4*np.pi*1e-7
+        # Order: Electrical Permittivity, Electrical Conductivity, Magnetic Permeability, Magnetic Loss, Density
+        self.FeO = np.array([50, 37*eps_0, 1, 0.1*mu_0, 5.74])
+        self.TiO2 = np.array([20, 80*eps_0, 1, 0.1*mu_0, 4.23])
+        self.Al2O3 = np.array([10, 9*eps_0, 1, 0.1*mu_0, 3.95])
+        self.MgO = np.array([5, 9*eps_0, 1, 0.1*mu_0, 3.58])
+        self.SiO2 = np.array([3.58, 0.001*eps_0, 1.05, 0.02*mu_0, 2.65])
+        self.CaO = np.array([5, 6*eps_0, 1, 0.1*mu_0, 3.35])
+        self.Potassium = np.array([5, 4*eps_0, 1, 0.1*mu_0, 2.34])
+        self.Thorium = np.array([5, 4*eps_0, 1, 0.1*mu_0, 11.72])
+
+        self.ID = ID
+
+        # Could implement for a range of volume fractions in the future
+        wt_all = np.array([wtFeO, wtTiO2, wtAl2O3, wtMgO, wtSiO2, wtCaO, wtPotassium, wtThorium])
+        densities = np.array([self.FeO[4], self.TiO2[4], self.Al2O3[4], self.MgO[4], self.SiO2[4], self.CaO[4], self.Potassium[4], self.Thorium[4]])
+        vol_fr_all = wt_all / densities
+
+        self.vol_fr_moon_layer = vol_fr_all / np.sum(vol_fr_all)
+        self.startmaterialnum = 0
+
+    def calculate_properties(self, nbins, G, fractalboxname):
+        """
+        Calculates the soil's properties based on the Bruggeman mixing model.
+        Args:
+            nbins (int): Number of bins to use to create the different materials.
+            G (class): Grid class instance - holds essential parameters describing the model.
+            fractalboxname (str): Name of the fractal box for which the materials are being created.
+        """
+        self.startmaterialnum = len(G.materials)
+
+        sets = []
+        
+        for i in range(nbins):
+            # Generate random values within the given ranges
+            fractions = np.array([np.random.uniform(low, high) for low, high in ranges])
+            
+            # Normalize to make the sum 100%
+            total = np.sum(fractions)
+            normalized_fractions = (fractions / total) * 100
+            sets.append(normalized_fractions)
+        
+            # Add enough zeroes to the material name so that they have the same length
+            digitscount =  len(str(int(nbins)))
+            materialID = '|{}_{}|'.format(fractalboxname, str(i + 1).zfill(digitscount))
+            m = Material(len(G.materials), materialID)
+            m.type = 'debye'
+            m.averagable = False
+            m.poles = 1
+            if m.poles > Material.maxpoles:
+                Material.maxpoles = m.poles
+            m.er = 
+            m.se = 
+            m.mr = 
+            m.sm = 
+            G.materials.append(m)
+
+
+    def bruggerman_mixing_model(volume_fractions, epsilon_values):
+        def equation(epsilon_eff):
+            numerator = 0
+            denominator = 0
+            for i in range(len(volume_fractions)):
+                numerator += (epsilon_values[i] - epsilon_eff) * volume_fractions[i]
+                denominator += (epsilon_values[i] + 2 * epsilon_eff) * volume_fractions[i]
+            return numerator / denominator
+        
+        epsilon_eff = fsolve(equation, epsilon_values[0])
+        return epsilon_eff[0]
