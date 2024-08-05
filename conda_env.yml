@@ -1,7 +1,7 @@
 # This file may be used to create a conda environment using:
 # $ conda create --name gprMax --file <this file>
 
-name: gprMax_brms
+name: gprMax_br_moon
 dependencies:
 - python>3.6
 - colorama

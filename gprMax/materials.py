@@ -345,14 +345,13 @@ class GenBruggemanSoilMoon(object):
             wt<Mineral_Name>2 (float): <Mineral_Name>'s  weight fraction of the soil, upper bound.
         """
         eps_0 = 8.854e-12
-        mu_0 = 4*np.pi*1e-7
         # Order: Electrical Permittivity, Electrical Conductivity, Magnetic Permeability, Magnetic Loss, Density
-        self.FeO = np.array([14.2, 37*eps_0, 1, 0.1*mu_0, 5.74])
-        self.TiO2 = np.array([86, 80*eps_0, 1, 0.1*mu_0, 4.23])
-        self.Al2O3 = np.array([9.34, 9*eps_0, 1, 0.1*mu_0, 3.95])
-        self.MgO = np.array([9.65, 9*eps_0, 1, 0.1*mu_0, 3.58])
-        self.SiO2 = np.array([3.58, 0.001*eps_0, 1.05, 0.02*mu_0, 2.65])
-        self.CaO = np.array([11.8, 6*eps_0, 1, 0.1*mu_0, 3.35])
+        self.FeO = np.array([14.2, 1.13e9*eps_0, 1, 0.1, 5.74])
+        self.TiO2 = np.array([86, 1.13e4*eps_0, 1, 0.1, 4.23])
+        self.Al2O3 = np.array([9.34, 1.13e1*eps_0, 1, 0.1, 3.95])
+        self.MgO = np.array([9.65, 1.13*eps_0, 1, 0.1, 3.58])
+        self.SiO2 = np.array([3.58, 1.13e-4*eps_0, 1.05, 0.02, 2.65])
+        self.CaO = np.array([11.8, 1.13e2*eps_0, 1, 0.1, 3.35])
 
         self.ID = ID
 
@@ -385,22 +384,16 @@ class GenBruggemanSoilMoon(object):
             material_sets.append(normalized_fractions)
 
         for i, fractions in enumerate(material_sets):
-            # Calculate the effective permittivity and permeability using the Bruggeman mixing model
-            # Need to add dispersion to FeO, and try to get it complex
-            
+
             # Add enough zeroes to the material name so that they have the same length
             digitscount =  len(str(int(nbins)))
             materialID = '|{}_{}|'.format(fractalboxname, str(i + 1).zfill(digitscount))
             m = Material(len(G.materials), materialID)
-            # m.type = 'debye'
             m.averagable = False
-            # m.poles = 1
-            # if m.poles > Material.maxpoles:
-            #     Material.maxpoles = m.poles
-            m.er = bruggerman_mixing_model(fractions, [material[0] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]])
-            m.se = np.average([material[1] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
-            m.mr = np.average([material[2] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
-            m.sm = np.average([material[3] for material in [self.FeO, self.TiO2, self.Al2O3, self.MgO, self.SiO2, self.CaO]], weights=fractions)
+            m.er = bruggerman_mixing_model(fractions, [self.FeO[0], self.TiO2[0], self.Al2O3[0], self.MgO[0], self.SiO2[0], self.CaO[0]])
+            m.se = np.average([self.FeO[1], self.TiO2[1], self.Al2O3[1], self.MgO[1], self.SiO2[1], self.CaO[1]], weights=fractions)
+            m.mr = np.average([self.FeO[2], self.TiO2[2], self.Al2O3[2], self.MgO[2], self.SiO2[2], self.CaO[2]], weights=fractions)
+            m.sm = np.average([self.FeO[3], self.TiO2[3], self.Al2O3[3], self.MgO[3], self.SiO2[3], self.CaO[3]], weights=fractions)
             G.materials.append(m)
 
 def bruggerman_mixing_model(volume_fractions, epsilon_values):
