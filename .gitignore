@@ -22,4 +22,5 @@ dist/
 .ipynb_checkpoints/
 
 # Source code
-/moon_src/
+/final_local_scripts/
+/final_server_scripts/

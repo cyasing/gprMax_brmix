@@ -344,14 +344,13 @@ class GenBruggemanSoilMoon(object):
             wt<Mineral_Name>1 (float): <Mineral_Name>'s  weight fraction of the soil, lower bound.
             wt<Mineral_Name>2 (float): <Mineral_Name>'s  weight fraction of the soil, upper bound.
         """
-        eps_0 = 8.854e-12
         # Order: Electrical Permittivity, Electrical Conductivity, Magnetic Permeability, Magnetic Loss, Density
-        self.FeO = np.array([14.2, 1.13e9*eps_0, 1, 0.1, 5.74])
-        self.TiO2 = np.array([86, 1.13e4*eps_0, 1, 0.1, 4.23])
-        self.Al2O3 = np.array([9.34, 1.13e1*eps_0, 1, 0.1, 3.95])
-        self.MgO = np.array([9.65, 1.13*eps_0, 1, 0.1, 3.58])
-        self.SiO2 = np.array([3.58, 1.13e-4*eps_0, 1.05, 0.02, 2.65])
-        self.CaO = np.array([11.8, 1.13e2*eps_0, 1, 0.1, 3.35])
+        self.FeO = np.array([14.2, 1e-2, 1.001, 0, 5.74])
+        self.TiO2 = np.array([86, 1e-4, 1, 0, 4.23])
+        self.Al2O3 = np.array([9.34, 5e-10, 1, 0, 3.95])
+        self.MgO = np.array([9.65, 1e-11, 1, 0, 3.58])
+        self.SiO2 = np.array([3.58, 1e-15, 1, 0, 2.65])
+        self.CaO = np.array([11.8, 1e-10, 1, 0, 3.35])
 
         self.ID = ID
 
