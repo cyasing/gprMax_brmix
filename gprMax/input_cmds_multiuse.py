@@ -726,8 +726,8 @@ def process_multicmds(multicmds, G):
     if multicmds[cmdname] is not None:
         for cmdinstance in multicmds[cmdname]:
             tmp = cmdinstance.split()
-            if len(tmp) != 13:
-                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires exactly thirteen parameters')
+            if len(tmp) != 14:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires exactly fourteen parameters')
             if 100 < float(tmp[0]) < 0:
                 raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of FeO fraction')
             if 100 < float(tmp[1]) < 0:
@@ -752,11 +752,13 @@ def process_multicmds(multicmds, G):
                 raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for lower limit of CaO fraction')
             if 100 < float(tmp[11]) < 0:
                 raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value below 100 for upper limit of CaO fraction')
-            if any(x.ID == tmp[12] for x in G.mixingmodels):
+            if float(tmp[12]) < 0:
+                raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' requires a positive value for frequency of operation.')
+            if any(x.ID == tmp[13] for x in G.mixingmodels):
                 raise CmdInputError("'" + cmdname + ': ' + ' '.join(tmp) + "'" + ' with ID {} already exists'.format(tmp[6]))
 
             # Create a new instance of the Material class material (start index after pec & free_space)
-            s = GenBruggemanSoilMoon(tmp[12], float(tmp[0]), float(tmp[1]), float(tmp[2]), float(tmp[3]), float(tmp[4]), float(tmp[5]), float(tmp[6]), float(tmp[7]), float(tmp[8]), float(tmp[9]), float(tmp[10]), float(tmp[11]))
+            s = GenBruggemanSoilMoon(tmp[13], float(tmp[0]), float(tmp[1]), float(tmp[2]), float(tmp[3]), float(tmp[4]), float(tmp[5]), float(tmp[6]), float(tmp[7]), float(tmp[8]), float(tmp[9]), float(tmp[10]), float(tmp[11]), float(tmp[12]))
 
             if G.messages:
                 print('Mixing model (General Bruggeman) used to create {} with FeO fraction {:g} to {:g}, TiO2 fraction {:g} to {:g}, Al2O3 fraction {:g} to {:g}, MgO fraction {:g} to {:g}, SiO2 fraction {:g} to {:g}, CaO fraction {:g} to {:g} created.'.format(s.ID, s.vol_fr_all_range[0][0], s.vol_fr_all_range[1][0], s.vol_fr_all_range[0][1], s.vol_fr_all_range[1][1], s.vol_fr_all_range[0][2], s.vol_fr_all_range[1][2], s.vol_fr_all_range[0][3], s.vol_fr_all_range[1][3], s.vol_fr_all_range[0][4], s.vol_fr_all_range[1][4], s.vol_fr_all_range[0][5], s.vol_fr_all_range[1][5]))

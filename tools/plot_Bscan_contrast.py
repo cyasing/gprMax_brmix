@@ -53,6 +53,7 @@ def mpl_plot(filename, outputdata, dt, rxnumber, rxcomponent):
     plt.ylabel('Time [s]')
     # plt.title('{}'.format(filename))
 
+
     # Grid properties
     ax = fig.gca()
     ax.grid(which='both', axis='both', linestyle='-.')

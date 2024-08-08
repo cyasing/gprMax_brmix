@@ -337,20 +337,23 @@ class GenBruggemanSoilMoon(object):
     model by Bruggeman ().
     """
 
-    def __init__(self, ID, wtFeO1, wtFeO2, wtTiO21, wtTiO22, wtAl2O31, wtAl2O32, wtMgO1, wtMgO2, wtSiO21, wtSiO22, wtCaO1, wtCaO2):
+    def __init__(self, ID, wtFeO1, wtFeO2, wtTiO21, wtTiO22, wtAl2O31, wtAl2O32, wtMgO1, wtMgO2, wtSiO21, wtSiO22, wtCaO1, wtCaO2, fr):
         """
         Args:
             ID (str): Name of the soil.
+            fr: Centre frequency of operation.
             wt<Mineral_Name>1 (float): <Mineral_Name>'s  weight fraction of the soil, lower bound.
             wt<Mineral_Name>2 (float): <Mineral_Name>'s  weight fraction of the soil, upper bound.
         """
-        # Order: Electrical Permittivity, Electrical Conductivity, Magnetic Permeability, Magnetic Loss, Density
-        self.FeO = np.array([14.2, 1e-2, 1.001, 0, 5.74])
-        self.TiO2 = np.array([86, 1e-4, 1, 0, 4.23])
-        self.Al2O3 = np.array([9.34, 5e-10, 1, 0, 3.95])
-        self.MgO = np.array([9.65, 1e-11, 1, 0, 3.58])
-        self.SiO2 = np.array([3.58, 1e-15, 1, 0, 2.65])
-        self.CaO = np.array([11.8, 1e-10, 1, 0, 3.35])
+        omega = 2 * np.pi * fr
+        eps_0 = 8.854187817e-12
+        # Order: Electrical Permittivity, Imag(Complex Permittivity) = Electrical Conductivity / Omega, Magnetic Permeability, Magnetic Loss, Density
+        self.FeO = np.array([14.2*eps_0, 1e-2/omega, 1.001, 0, 5.74])
+        self.TiO2 = np.array([86*eps_0, 1e-4/omega, 1, 0, 4.23])
+        self.Al2O3 = np.array([9.34*eps_0, 5e-10/omega, 1, 0, 3.95])
+        self.MgO = np.array([9.65*eps_0, 1e-11/omega, 1, 0, 3.58])
+        self.SiO2 = np.array([3.58*eps_0, 1e-15/omega, 1, 0, 2.65])
+        self.CaO = np.array([11.8*eps_0, 1e-10/omega, 1, 0, 3.35])
 
         self.ID = ID
 
@@ -389,20 +392,32 @@ class GenBruggemanSoilMoon(object):
             materialID = '|{}_{}|'.format(fractalboxname, str(i + 1).zfill(digitscount))
             m = Material(len(G.materials), materialID)
             m.averagable = False
-            m.er = bruggerman_mixing_model(fractions, [self.FeO[0], self.TiO2[0], self.Al2O3[0], self.MgO[0], self.SiO2[0], self.CaO[0]])
-            m.se = np.average([self.FeO[1], self.TiO2[1], self.Al2O3[1], self.MgO[1], self.SiO2[1], self.CaO[1]], weights=fractions)
+            [eps_r, eps_i] = bruggerman_mixing_model(fractions, [self.FeO[0], self.TiO2[0], self.Al2O3[0], self.MgO[0], self.SiO2[0], self.CaO[0]], [self.FeO[1], self.TiO2[1], self.Al2O3[1], self.MgO[1], self.SiO2[1], self.CaO[1]])
+            m.er = eps_r / 8.854187817e-12
+            m.se = eps_i * 2 * np.pi * 100e6 # Need to find a way to use internally stored frequency value
             m.mr = np.average([self.FeO[2], self.TiO2[2], self.Al2O3[2], self.MgO[2], self.SiO2[2], self.CaO[2]], weights=fractions)
             m.sm = np.average([self.FeO[3], self.TiO2[3], self.Al2O3[3], self.MgO[3], self.SiO2[3], self.CaO[3]], weights=fractions)
             G.materials.append(m)
 
-def bruggerman_mixing_model(volume_fractions, epsilon_values):
-        def equation(epsilon_eff):
-            numerator = 0
-            denominator = 0
-            for i in range(len(volume_fractions)):
-                numerator += (epsilon_values[i] - epsilon_eff) * volume_fractions[i]
-                denominator += (epsilon_values[i] + 2 * epsilon_eff) * volume_fractions[i]
-            return numerator / denominator
+def bruggerman_mixing_model(volume_fractions, epsilon_values_real, epsilon_values_imag):
+    # Combine real and imaginary parts into complex numbers
+    epsilon_values = np.array([complex(real, imag) for real, imag in zip(epsilon_values_real, epsilon_values_imag)])
+    
+    # Define a function that splits the real and imaginary parts of epsilon_eff
+    def equation(x):
+        epsilon_eff = complex(x[0], x[1])  # Combine into a complex number
+        numerator = 0
+        denominator = 0
+        for i in range(len(volume_fractions)):
+            numerator += (epsilon_values[i] - epsilon_eff) * volume_fractions[i]
+            denominator += (epsilon_values[i] + 2 * epsilon_eff) * volume_fractions[i]
+        result = numerator / denominator
+        return [result.real, result.imag]  # Return real and imaginary parts separately
+
+    # Initial guess for fsolve (real and imaginary parts separately)
+    initial_guess = [epsilon_values[0].real, epsilon_values[0].imag]
+    
+    # Solve for the effective permittivity (real and imaginary parts separately)
+    solution = fsolve(equation, initial_guess)
         
-        epsilon_eff = fsolve(equation, epsilon_values[0])
-        return epsilon_eff[0]
+    return solution
