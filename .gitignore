@@ -25,3 +25,6 @@ dist/
 /final_local_scripts/
 /final_server_scripts/
 /init_tests/
+/server_delaunay/
+/server_min/
+/server_convex/

@@ -48,7 +48,7 @@ def mpl_plot(filename, outputdata, dt, rxnumber, rxcomponent):
     plt.imshow(outputdata, 
                extent=[0, outputdata.shape[1], outputdata.shape[0] * dt, 0], 
                interpolation='nearest', aspect='auto', cmap='seismic', 
-               vmin=-np.amax(np.abs(outputdata))/8, vmax=np.amax(np.abs(outputdata))/8)
+               vmin=-np.amax(np.abs(outputdata))/512, vmax=np.amax(np.abs(outputdata))/512)
     plt.xlabel('Trace number')
     plt.ylabel('Time [s]')
     # plt.title('{}'.format(filename))
