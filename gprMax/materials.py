@@ -349,8 +349,8 @@ class GenBruggemanSoilMoon(object):
         eps_0 = 8.854187817e-12
         # Order: Electrical Permittivity, Imag(Complex Permittivity) = Electrical Conductivity / Omega, Magnetic Permeability, Magnetic Loss, Density
         self.FeO = np.array([13*eps_0, 1e-3/omega, 1.001, 0, 5.74])
-        self.TiO2 = np.array([86*eps_0, 1e-6/omega, 1, 0, 4.23])
-        self.Al2O3 = np.array([9.34*eps_0, 1e-10/omega, 1, 0, 3.95])
+        self.TiO2 = np.array([86*eps_0, 1e-5/omega, 1, 0, 4.23])
+        self.Al2O3 = np.array([9.34*eps_0, 5e-10/omega, 1, 0, 3.95])
         self.MgO = np.array([9.65*eps_0, 1e-11/omega, 1, 0, 3.58])
         self.SiO2 = np.array([3.58*eps_0, 1e-15/omega, 1, 0, 2.65])
         self.CaO = np.array([11.8*eps_0, 1e-10/omega, 1, 0, 3.35])
