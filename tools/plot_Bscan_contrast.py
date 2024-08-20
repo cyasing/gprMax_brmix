@@ -42,7 +42,7 @@ def mpl_plot(filename, outputdata, dt, rxnumber, rxcomponent):
     """
 
     (path, filename) = os.path.split(filename)
-
+    plt.rcParams['font.size'] = 23
     fig = plt.figure(num=filename + ' - rx' + str(rxnumber), 
                      figsize=(20, 10), facecolor='w', edgecolor='w')
     plt.imshow(outputdata, 
@@ -77,7 +77,7 @@ def mpl_plot(filename, outputdata, dt, rxnumber, rxcomponent):
 
 
 if __name__ == "__main__":
-
+    plt.rcParams['font.size'] = 23
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Plots a B-scan image.', 
                                      usage='cd gprMax; python -m tools.plot_Bscan outputfile output')
